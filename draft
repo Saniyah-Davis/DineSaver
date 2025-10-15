@@ -1,0 +1,67 @@
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
+
+export default function RestaurantPriceCompare() {
+  const [query, setQuery] = useState("");
+  const [restaurants, setRestaurants] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const searchRestaurants = async () => {
+    if (!query.trim()) return;
+    setLoading(true);
+
+    // Example Yelp API call (replace with your backend or proxy)
+    try {
+      const res = await fetch(`/api/search?term=${query}&location=New+York`);
+      const data = await res.json();
+      setRestaurants(data.businesses || []);
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
+      <h1 className="text-3xl font-bold mb-4 text-gray-800 text-center">
+        🍔 Restaurant Price Compare
+      </h1>
+      <div className="flex gap-2 mb-6 w-full max-w-md">
+        <Input
+          placeholder="Search food or restaurant (e.g., burger, pizza)"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="flex-grow"
+        />
+        <Button onClick={searchRestaurants} disabled={loading}>
+          {loading ? "Searching..." : "Search"}
+        </Button>
+      </div>
+
+      <div className="grid gap-4 w-full max-w-3xl">
+        {restaurants.length === 0 && !loading && (
+          <p className="text-gray-500 text-center">No results yet. Try searching above.</p>
+        )}
+
+        {restaurants.map((r) => (
+          <Card key={r.id} className="shadow-md">
+            <CardContent className="flex justify-between items-center p-4">
+              <div>
+                <h2 className="text-xl font-semibold">{r.name}</h2>
+                <p className="text-gray-600">{r.location?.address1}</p>
+                <p className="text-sm text-gray-500">{r.price || "N/A"}</p>
+              </div>
+              <div className="flex items-center gap-1 text-yellow-500">
+                <Star className="w-5 h-5 fill-current" />
+                <span className="text-gray-800 font-medium">{r.rating}</span>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
